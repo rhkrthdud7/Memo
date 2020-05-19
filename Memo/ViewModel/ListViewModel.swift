@@ -9,19 +9,26 @@
 import Foundation
 
 import RxSwift
+import RxCocoa
 
-struct ListViewModel {
+class ListViewModel {
     let disposeBag = DisposeBag()
     
     // inputs
-    var titleText = BehaviorSubject(value: "")
+    var titleText: BehaviorSubject<String>
     var addTask = PublishSubject<Void>()
+    var deleteTask = PublishSubject<Int>()
     
     // outputs
     var isButtonAddEnabled = BehaviorSubject(value: false)
-    var memos = BehaviorSubject<[String]>(value: [])
+    var memos: BehaviorRelay<[String]>
     
     init() {
+        let titleText = BehaviorSubject(value: "")
+        self.titleText = titleText
+        let memos = BehaviorRelay<[String]>(value: [])
+        self.memos = memos
+
         titleText
             .distinctUntilChanged()
             .map { !$0.isEmpty }
@@ -30,8 +37,18 @@ struct ListViewModel {
         
         addTask
             .withLatestFrom(titleText)
-            .map { value -> [String] in [value] }
-            .subscribe(onNext: memos.onNext)
+            .filter { $0.isEmpty == false }
+            .do(onNext: { [weak self] _ in self?.titleText.onNext("") })
+            .map { [$0] + memos.value }
+            .subscribe(onNext: memos.accept)
+            .disposed(by: disposeBag)
+        
+        deleteTask
+            .map({ index in
+                var current = memos.value
+                current.remove(at: index)
+                return current
+            }).subscribe(onNext: memos.accept)
             .disposed(by: disposeBag)
     }
 }

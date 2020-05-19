@@ -12,6 +12,7 @@ import RxSwift
 import RxCocoa
 import RxGesture
 import RxOptional
+import RxKeyboard
 
 import SnapKit
 import SwiftyColor
@@ -32,6 +33,7 @@ class ListViewController: UIViewController {
         $0.leftView = UIView(frame: Metric.textFieldOffsetViewFrame)
         $0.leftViewMode = .always
         $0.clearButtonMode = .whileEditing
+        $0.returnKeyType = .done
     }
     let buttonAdd = UIButton(type: .system).then {
         $0.setTitle("추가", for: .normal)
@@ -96,8 +98,19 @@ class ListViewController: UIViewController {
             .bind(to: viewModel.titleText)
             .disposed(by: disposeBag)
         
-        buttonAdd.rx.controlEvent(.touchUpInside)
+        Observable.of(
+            buttonAdd.rx.controlEvent(.touchUpInside),
+            textField.rx.controlEvent(.editingDidEndOnExit)).merge()
             .bind(to: viewModel.addTask)
+            .disposed(by: disposeBag)
+        
+        tableView.rx.itemDeleted
+            .map { $0.row }
+            .bind(to: viewModel.deleteTask)
+            .disposed(by: disposeBag)
+        
+        viewModel.titleText
+            .bind(to: textField.rx.text)
             .disposed(by: disposeBag)
         
         viewModel.isButtonAddEnabled
@@ -109,7 +122,12 @@ class ListViewController: UIViewController {
             .bind(to: tableView.rx.items(cellIdentifier: identifier, cellType: UITableViewCell.self)) { row, element, cell in
                 cell.textLabel?.text = element
             }.disposed(by: disposeBag)
+        
+        RxKeyboard.instance.visibleHeight
+            .drive(onNext: { [weak self] height in
+                self?.tableView.contentInset.bottom = height
+                self?.tableView.verticalScrollIndicatorInsets.bottom = height
+            }).disposed(by: disposeBag)
     }
 
 }
-
