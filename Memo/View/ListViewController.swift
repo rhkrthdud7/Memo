@@ -42,7 +42,7 @@ class ListViewController: UIViewController {
         $0.register(UITableViewCell.self, forCellReuseIdentifier: identifier)
     }
     
-    init(viewModel: ListViewModel = ListViewModel()) {
+    init(viewModel: ListViewModel) {
         self.viewModel = viewModel
         
         super.init(nibName: nil, bundle: nil)
@@ -120,7 +120,7 @@ class ListViewController: UIViewController {
         
         viewModel.memos
             .bind(to: tableView.rx.items(cellIdentifier: identifier, cellType: UITableViewCell.self)) { row, element, cell in
-                cell.textLabel?.text = element
+                cell.textLabel?.text = element.title
             }.disposed(by: disposeBag)
         
         RxKeyboard.instance.visibleHeight

@@ -13,6 +13,7 @@ import RxCocoa
 
 class ListViewModel {
     let disposeBag = DisposeBag()
+    let memoService: MemoServiceType
     
     // inputs
     var titleText: BehaviorSubject<String>
@@ -21,13 +22,20 @@ class ListViewModel {
     
     // outputs
     var isButtonAddEnabled = BehaviorSubject(value: false)
-    var memos: BehaviorRelay<[String]>
+    var memos: BehaviorRelay<[Memo]>
     
-    init() {
+    init(memoService: MemoServiceType) {
+        self.memoService = memoService
+        
         let titleText = BehaviorSubject(value: "")
         self.titleText = titleText
-        let memos = BehaviorRelay<[String]>(value: [])
+        let memos = BehaviorRelay<[Memo]>(value: [])
         self.memos = memos
+        
+        memoService.fetchMemo()
+            .take(1)
+            .subscribe(onNext: memos.accept)
+            .disposed(by: disposeBag)
 
         titleText
             .distinctUntilChanged()
@@ -38,17 +46,17 @@ class ListViewModel {
         addTask
             .withLatestFrom(titleText)
             .filter { $0.isEmpty == false }
-            .do(onNext: { [weak self] _ in self?.titleText.onNext("") })
+            .do(onNext: { _ in titleText.onNext("") })
+            .flatMap { memoService.createMemo(title: $0, text: nil) }
             .map { [$0] + memos.value }
             .subscribe(onNext: memos.accept)
             .disposed(by: disposeBag)
         
         deleteTask
-            .map({ index in
-                var current = memos.value
-                current.remove(at: index)
-                return current
-            }).subscribe(onNext: memos.accept)
+            .map { memos.value[$0] }
+            .flatMap(memoService.deleteMemo)
+            .subscribe(onNext: memos.accept)
             .disposed(by: disposeBag)
+        
     }
 }
