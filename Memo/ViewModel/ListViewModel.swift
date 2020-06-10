@@ -32,6 +32,23 @@ class ListViewModel {
         let memos = BehaviorRelay<[Memo]>(value: [])
         self.memos = memos
         
+        memoService.event
+            .subscribe(onNext: { event in
+                var newMemos = memos.value
+                switch event {
+                case .create(let memo):
+                    memos.accept([memo] + newMemos)
+                case .update(let memo):
+                    if let index = newMemos.firstIndex(of: memo) {
+                        newMemos[index] = memo
+                        memos.accept(newMemos)
+                    }
+                case .delete(let id):
+                    newMemos.removeAll(where: { $0.id == id })
+                    memos.accept(newMemos)
+                }
+            }).disposed(by: disposeBag)
+        
         memoService.fetchMemo()
             .take(1)
             .subscribe(onNext: memos.accept)
@@ -49,14 +66,16 @@ class ListViewModel {
             .do(onNext: { _ in titleText.onNext("") })
             .flatMap { memoService.createMemo(title: $0, text: nil) }
             .map { [$0] + memos.value }
-            .subscribe(onNext: memos.accept)
-            .disposed(by: disposeBag)
+            .subscribe(onNext: { memo in
+                
+            }).disposed(by: disposeBag)
         
         deleteTask
             .map { memos.value[$0] }
             .flatMap(memoService.deleteMemo)
-            .subscribe(onNext: memos.accept)
-            .disposed(by: disposeBag)
+            .subscribe(onNext: { memo in
+                
+            }).disposed(by: disposeBag)
         
     }
 }

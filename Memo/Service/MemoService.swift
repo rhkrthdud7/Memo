@@ -10,10 +10,17 @@ import Foundation
 import CoreData
 import RxSwift
 
+enum MemoEvent {
+  case create(Memo)
+  case update(Memo)
+  case delete(String)
+}
+
 protocol MemoServiceType {
+    var event: PublishSubject<MemoEvent> { get }
     func fetchMemo() -> Observable<[Memo]>
     func createMemo(title: String, text: String?) -> Observable<Memo>
-    func deleteMemo(memo: Memo) -> Observable<[Memo]>
+    func deleteMemo(memo: Memo) -> Observable<Memo>
 }
 
 class MemoService: MemoServiceType {
@@ -21,8 +28,8 @@ class MemoService: MemoServiceType {
     let context: NSManagedObjectContext
     
     let entityName: String = "Memo"
-    
-    lazy var entity = NSEntityDescription.entity(forEntityName: entityName, in: context)!
+
+    let event = PublishSubject<MemoEvent>()
     
     init(delegate: AppDelegate) {
         appDelegate = delegate
@@ -56,10 +63,11 @@ class MemoService: MemoServiceType {
             NSLog(error.localizedDescription)
         }
         
-        return .just(memo)
+        return Observable.just(memo)
+            .do(onNext: { _ in self.event.onNext(.create(memo)) })
     }
     
-    func deleteMemo(memo: Memo) -> Observable<[Memo]> {
+    func deleteMemo(memo: Memo) -> Observable<Memo> {
         context.delete(memo)
         
         do {
@@ -68,7 +76,8 @@ class MemoService: MemoServiceType {
             NSLog(error.localizedDescription)
         }
         
-        return fetchMemo()
+        return Observable.just(memo)
+            .do(onNext: { _ in self.event.onNext(.delete(memo.id)) })
     }
     
 }
