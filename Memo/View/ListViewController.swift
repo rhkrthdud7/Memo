@@ -81,17 +81,12 @@ class ListViewController: UIViewController {
         view.addSubview(tableView)
         tableView.snp.makeConstraints {
             $0.top.equalTo(textField.snp.bottom)
-            $0.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide)
+            $0.leading.trailing.equalTo(view.safeAreaLayoutGuide)
+            $0.bottom.equalTo(view)
         }
     }
     
     func setupBindings() {
-        view.rx.tapGesture()
-            .when(.recognized)
-            .subscribe(onNext: { [unowned self] gesture in
-                self.textField.resignFirstResponder()
-            }).disposed(by: disposeBag)
-        
         textField.rx.controlEvent(.editingChanged)
             .withLatestFrom(textField.rx.text)
             .filterNil()
@@ -109,6 +104,14 @@ class ListViewController: UIViewController {
             .bind(to: viewModel.deleteTask)
             .disposed(by: disposeBag)
         
+        tableView.rx.modelSelected(Memo.self)
+            .subscribe(onNext: { [weak self] memo in
+                guard let self = self else { return }
+                let viewModel = DetailViewModel(memoService: self.viewModel.memoService, memo: memo)
+                let detailViewController = DetailViewController(viewModel: viewModel)
+                self.navigationController?.pushViewController(detailViewController, animated: true)
+            }).disposed(by: disposeBag)
+        
         viewModel.titleText
             .bind(to: textField.rx.text)
             .disposed(by: disposeBag)
@@ -119,14 +122,19 @@ class ListViewController: UIViewController {
             .disposed(by: disposeBag)
         
         viewModel.memos
+            .debug()
             .bind(to: tableView.rx.items(cellIdentifier: identifier, cellType: UITableViewCell.self)) { row, element, cell in
                 cell.textLabel?.text = element.title
+                cell.detailTextLabel?.text = element.text
+                cell.selectionStyle = .none
             }.disposed(by: disposeBag)
         
         RxKeyboard.instance.visibleHeight
             .drive(onNext: { [weak self] height in
-                self?.tableView.contentInset.bottom = height
-                self?.tableView.verticalScrollIndicatorInsets.bottom = height
+                guard let self = self else { return }
+                let bottom = max(height - self.view.safeAreaInsets.bottom, 0)
+                self.tableView.contentInset.bottom = bottom
+                self.tableView.verticalScrollIndicatorInsets.bottom = bottom
             }).disposed(by: disposeBag)
     }
 

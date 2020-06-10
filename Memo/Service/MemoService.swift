@@ -20,6 +20,7 @@ protocol MemoServiceType {
     var event: PublishSubject<MemoEvent> { get }
     func fetchMemo() -> Observable<[Memo]>
     func createMemo(title: String, text: String?) -> Observable<Memo>
+    func updateMemo(memo: Memo, title: String, text: String?) -> Observable<Memo>
     func deleteMemo(memo: Memo) -> Observable<Memo>
 }
 
@@ -66,6 +67,23 @@ class MemoService: MemoServiceType {
         return Observable.just(memo)
             .do(onNext: { _ in self.event.onNext(.create(memo)) })
     }
+    
+    func updateMemo(memo: Memo, title: String, text: String?) -> Observable<Memo> {
+        let date = Date()
+        memo.title = title
+        memo.text = text
+        memo.modifiedAt = date
+        
+        do {
+            try context.save()
+        } catch {
+            NSLog(error.localizedDescription)
+        }
+        
+        return Observable.just(memo)
+            .do(onNext: { _ in self.event.onNext(.update(memo)) })
+    }
+
     
     func deleteMemo(memo: Memo) -> Observable<Memo> {
         context.delete(memo)
