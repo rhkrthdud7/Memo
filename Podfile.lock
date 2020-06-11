@@ -1,4 +1,5 @@
 PODS:
+  - Differentiator (4.0.1)
   - ReactorKit (2.0.1):
     - RxSwift (~> 5.0)
   - ReusableKit (3.0.0):
@@ -11,6 +12,10 @@ PODS:
   - RxCocoa (5.1.1):
     - RxRelay (~> 5)
     - RxSwift (~> 5)
+  - RxDataSources (4.0.1):
+    - Differentiator (~> 4.0)
+    - RxCocoa (~> 5.0)
+    - RxSwift (~> 5.0)
   - RxGesture (3.0.2):
     - RxCocoa (~> 5.1)
     - RxSwift (~> 5.1)
@@ -35,6 +40,7 @@ DEPENDENCIES:
   - ReusableKit (~> 3.0.0)
   - ReusableKit/RxSwift
   - RxCocoa (~> 5.1.1)
+  - RxDataSources (~> 4.0.1)
   - RxGesture (~> 3.0.1)
   - RxKeyboard (~> 1.0.0)
   - RxOptional (~> 4.1.0)
@@ -46,9 +52,11 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - Differentiator
     - ReactorKit
     - ReusableKit
     - RxCocoa
+    - RxDataSources
     - RxGesture
     - RxKeyboard
     - RxOptional
@@ -60,9 +68,11 @@ SPEC REPOS:
     - Then
 
 SPEC CHECKSUMS:
+  Differentiator: 886080237d9f87f322641dedbc5be257061b0602
   ReactorKit: a63c5e11e0fd32d59d672e54178b0ed2876b764b
   ReusableKit: e5f853ad4652e411f96b6119b2488afa12929be6
   RxCocoa: 32065309a38d29b5b0db858819b5bf9ef038b601
+  RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
   RxGesture: d6bd7447ca3a596c7a9702a6a2b6a2bb5d8bae54
   RxKeyboard: 6683c4344304a00f943c158bd8a43ce5469c82a7
   RxOptional: b1fcd60856807a564c0215c2184b8d33e7826dc2
@@ -73,6 +83,6 @@ SPEC CHECKSUMS:
   SwiftyColor: a2f468071c1b96be1ba41a0be7cf70d645cd7dcc
   Then: 90cd104fd951cec1980a03f57704ad8f784d4d79
 
-PODFILE CHECKSUM: da3d58598d20f676bfa03268901c06ed08f24511
+PODFILE CHECKSUM: 3b8e276169ce120195b7dbc4e5a846b547547cdb
 
 COCOAPODS: 1.9.1

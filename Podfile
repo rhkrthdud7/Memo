@@ -14,6 +14,7 @@ target 'Memo' do
   pod 'RxOptional', '~> 4.1.0'
   pod 'RxGesture', '~> 3.0.1'
   pod 'RxKeyboard', '~> 1.0.0'
+  pod 'RxDataSources', '~> 4.0.1'
   
   pod 'ReusableKit', '~> 3.0.0'
   pod 'ReusableKit/RxSwift'
