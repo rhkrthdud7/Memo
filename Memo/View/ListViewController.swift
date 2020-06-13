@@ -13,10 +13,13 @@ import RxCocoa
 import RxGesture
 import RxOptional
 import RxKeyboard
+import RxDataSources
 
 import SnapKit
 import SwiftyColor
 import Then
+
+typealias MemoListSection = AnimatableSectionModel<Int, Memo>
 
 class ListViewController: UIViewController {
     let disposeBag = DisposeBag()
@@ -41,6 +44,19 @@ class ListViewController: UIViewController {
     lazy var tableView = UITableView(frame: .zero, style: .insetGrouped).then {
         $0.register(UITableViewCell.self, forCellReuseIdentifier: identifier)
     }
+    
+    lazy var dataSource: RxTableViewSectionedAnimatedDataSource<MemoListSection> = {
+        let dataSource = RxTableViewSectionedAnimatedDataSource<MemoListSection>(configureCell: { [unowned self] _, tableView, indexPath, memo -> UITableViewCell in
+            let cell = tableView.dequeueReusableCell(withIdentifier: self.identifier, for: indexPath)
+            cell.textLabel?.text = memo.title
+            cell.detailTextLabel?.text = memo.text
+            cell.selectionStyle = .none
+            return cell
+        })
+        dataSource.canEditRowAtIndexPath = { _, _ in true }
+        return dataSource
+    }()
+    
     
     init(viewModel: ListViewModel) {
         self.viewModel = viewModel
@@ -122,12 +138,9 @@ class ListViewController: UIViewController {
             .disposed(by: disposeBag)
         
         viewModel.memos
-            .debug()
-            .bind(to: tableView.rx.items(cellIdentifier: identifier, cellType: UITableViewCell.self)) { row, element, cell in
-                cell.textLabel?.text = element.title
-                cell.detailTextLabel?.text = element.text
-                cell.selectionStyle = .none
-            }.disposed(by: disposeBag)
+            .map { [MemoListSection(model: 0, items: $0)] }
+            .bind(to: tableView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
         
         RxKeyboard.instance.visibleHeight
             .drive(onNext: { [weak self] height in
